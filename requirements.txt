@@ -1,0 +1,5 @@
+openai
+tiktoken
+tree-sitter-languages
+llama-index
+bs4

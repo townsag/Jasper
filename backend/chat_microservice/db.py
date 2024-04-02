@@ -42,25 +42,28 @@ def init_db_command():
 
 
 def init_app(app):
-    #app.teardown_appcontext() tells Flask to call that function when cleaning up 
+    # app.teardown_appcontext() tells Flask to call that function when cleaning up
     # after returning the response.
     app.teardown_appcontext(close_db)
-    # app.cli.add_command() adds a new command that can be called with the flask 
+    # app.cli.add_command() adds a new command that can be called with the flask
     # command. Like     $ flask --app flaskr init-db
     app.cli.add_command(init_db_command)
 
+
 def insert_new_conversation(user_id: int):
     # create a new conversation named new conversation in the database
+    now_str = datetime.now().isoformat()
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     db_cursor.execute(
-        "INSERT INTO conversation user_id, stared_date VALUES (?, ?)",
-        (user_id, datetime.now().isoformat())
+        "INSERT INTO conversation (user_id, tag_description, started_date, most_recent_entry_date) VALUES (?, ?, ?, ?)",
+        (user_id, "New Conversation", now_str, now_str)
     )
     conv_id = db_cursor.lastrowid
     db_connection.commit()
     db_cursor.close()
     return conv_id
+
 
 def check_name_unique(username: str):
     db_connection = get_db()
@@ -77,6 +80,7 @@ def check_name_unique(username: str):
         db_cursor.close()
         return True
 
+
 def insert_new_user(username: str, password_hash: str):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
@@ -88,6 +92,7 @@ def insert_new_user(username: str, password_hash: str):
     db_connection.commit()
     db_cursor.close()
     return user_id
+
 
 def select_user(username: str):
     db_connection = get_db()
@@ -101,12 +106,13 @@ def select_user(username: str):
         return False
     else:
         data = {
-            "user_id":user["user_id"],
-            "username":user["username"],
-            "password":user["password"]
+            "user_id": user["user_id"],
+            "username": user["username"],
+            "password": user["password"]
         }
         db_cursor.close()
         return data
+
 
 def select_conversation(conv_id: int):
     # ToDo: implement logic to handle errors like empty set in the select
@@ -118,33 +124,35 @@ def select_conversation(conv_id: int):
         (conv_id,)
     ).fetchone()
     data = {
-        "conv_id":conversation[0],
-        "user_id":conversation[1],
-        "tag_description":conversation[2], 
-        "started_date":conversation[3],
-        "most_recent_entry_date":conversation[4]
+        "conv_id": conversation[0],
+        "user_id": conversation[1],
+        "tag_description": conversation[2],
+        "started_date": conversation[3],
+        "most_recent_entry_date": conversation[4]
     }
     db_cursor.close()
     return data
+
 
 def select_all_conversations(user_id: int):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     user_conversations = db_cursor.execute(
-        "SELECT * FROM conversation WHERE user_id=?",
+        "SELECT * FROM conversation WHERE user_id=? ORDER BY DATE(most_recent_entry_date) DESC",
         (user_id,)
     ).fetchall()
     data = list()
     for conversation in user_conversations:
         data.append({
-            "conv_id":conversation[0],
-            "user_id":conversation[1],
-            "tag_description":conversation[2], 
-            "started_date":conversation[3],
-            "most_recent_entry_date":conversation[4]
+            "conv_id": conversation[0],
+            "user_id": conversation[1],
+            "tag_description": conversation[2],
+            "started_date": conversation[3],
+            "most_recent_entry_date": conversation[4]
         })
     db_cursor.close()
     return data
+
 
 def select_all_messages(user_id: int, conv_id: int):
     db_connection = get_db()
@@ -156,13 +164,14 @@ def select_all_messages(user_id: int, conv_id: int):
     data = list()
     for message in user_conversation_messages:
         data.append({
-            "message_id":message[0],
-            "conv_d":message[1],
-            "conv_offset":message[2],
-            "sender_role":message[3]
+            "message_id": message[0],
+            "conv_d": message[1],
+            "conv_offset": message[2],
+            "sender_role": message[3]
         })
     db_cursor.close()
     return data
+
 
 def select_previous_messages(user_id: int, conv_id: int, conv_offset: int):
     db_connection = get_db()
@@ -174,16 +183,17 @@ def select_previous_messages(user_id: int, conv_id: int, conv_offset: int):
     data = list()
     for row in previous_messages:
         data.append({
-            "message_id":row[0],
-            "conv_id":row[1],
-            "conv_offset":row[2],
-            "sender_role":row[3],
-            "content":row[4]
+            "message_id": row[0],
+            "conv_id": row[1],
+            "conv_offset": row[2],
+            "sender_role": row[3],
+            "content": row[4]
         })
     db_cursor.close()
     return data
 
-def drop_messages_after(user_id:int, conv_id:int, conv_offset:int):
+
+def drop_messages_after(user_id: int, conv_id: int, conv_offset: int):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     # drop all messages with offset gereater than or equal to the current message conv offset
@@ -193,10 +203,9 @@ def drop_messages_after(user_id:int, conv_id:int, conv_offset:int):
     )
     db_connection.commit()
     db_cursor.close()
-    
-    
 
-def insert_new_message(user_id: int, conv_id: int, conv_offset:int, sender_role:str, content:str):
+
+def insert_new_message(user_id: int, conv_id: int, conv_offset: int, sender_role: str, content: str):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     db_cursor.execute(

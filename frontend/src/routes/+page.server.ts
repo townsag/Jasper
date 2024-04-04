@@ -49,7 +49,7 @@ export const actions: Actions = {
         });
 
         console.log("redirecting to conversations\n\n");
-        throw(redirect(302, "/conversations"));
+        return redirect(302, "/conversations");
     },
 
     register: async (event) => {
@@ -81,6 +81,6 @@ export const actions: Actions = {
             return fail(401, { error:"flask api error"});
         }
 
-        throw(redirect(302, "/conversations"));
+        return redirect(302, "/conversations");
     }
 };

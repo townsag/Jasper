@@ -11,7 +11,7 @@ Jasper is a programming companion for developers working on projects in JAX. I w
 Jax + expert ~= JAXpert ~= Jasper
 
 ## Example View of the chat page
-![Screenshot of the chat page showing the assistant answering a Jax specific question](/assets/chat_example.png)
+<img src="/assets/chat_example.png" width="650">
 
 ## Example View of the login page
 ![Screenshot of the login page](/assets/login_example.png)

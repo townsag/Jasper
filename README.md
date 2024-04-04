@@ -9,3 +9,9 @@
 Jasper is a programming companion for developers working on projects in JAX. I was motivated to start this project because GPT-3.5 is pretty bad at writing JAX and I want the benefits of writing code with an LLM companion but grounded in the truthfulness of the JAX documentation. Jasper uses the RAG pattern to find chunks of text from the JAX documentation website that are semantically similar to the question asked in the chat. These chunks are then appended to the user question when it is sent to a chat api endpoint for completion.
 
 Jax + expert ~= JAXpert ~= Jasper
+
+## Example View of the chat page
+![Screenshot of the chat page showing the assistant answering a Jax specific question](/assets/chat_example.png)
+
+## Example View of the login page
+![Screenshot of the login page](/assets/login_example.png)

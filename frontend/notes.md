@@ -1,0 +1,13 @@
+- Sveltekit Reactivity and State
+    - understanding so far:
+        - sveltekit reactively redraws components when the state that component depends on changes
+        - this is only triggered on assignment to the variable ex:  count = count + 1
+        - this does not happen when a vatiable changes but is still the same object ex: messages.push("new_message)
+            - this is not assignment
+        - reactive varables can be defined such that they are updated based on the changes to other variables 
+            - ex: $: doubled = 2 * count;
+            - this is like a use effect in ract
+        - can also run abitrary statements reactively, statement is rerun whenever any of the variables it depends on changes
+            - ex: $: console.log(`this is count ${count}`)
+        - use assignment hot fix to update arrays
+            - numbers.push(5); numbers = numbers;

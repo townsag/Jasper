@@ -137,6 +137,7 @@ def select_conversation(conv_id: int):
 def select_all_conversations(user_id: int):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
+    # ToDo: i am suspicious that this is not actually selecting the conversations in the correct order
     user_conversations = db_cursor.execute(
         "SELECT * FROM conversation WHERE user_id=? ORDER BY DATE(most_recent_entry_date) DESC",
         (user_id,)
@@ -154,31 +155,31 @@ def select_all_conversations(user_id: int):
     return data
 
 
-def select_all_messages(user_id: int, conv_id: int):
+def select_all_messages(conv_id: int):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     user_conversation_messages = db_cursor.execute(
-        "SELECT * FROM message WHERE user_id=? AND conv_id=? ORDER BY conv_offset ASC",
-        (user_id, conv_id)
+        "SELECT * FROM message WHERE conv_id=? ORDER BY conv_offset ASC",
+        (conv_id,)
     ).fetchall()
     data = list()
     for message in user_conversation_messages:
         data.append({
-            "message_id": message[0],
-            "conv_d": message[1],
+            "conv_id": message[1],
             "conv_offset": message[2],
-            "sender_role": message[3]
+            "sender_role": message[3],
+            "content":message[4]
         })
     db_cursor.close()
     return data
 
 
-def select_previous_messages(user_id: int, conv_id: int, conv_offset: int):
+def select_previous_messages(conv_id: int, conv_offset: int):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     previous_messages = db_cursor.execute(
-        "SELECT * FROM message WHERE user_id=? AND conv_id=? AND conv_offset<? ORDER BY conv_offset ASC",
-        (user_id, conv_id, conv_offset)
+        "SELECT * FROM message WHERE conv_id=? AND conv_offset<? ORDER BY conv_offset ASC",
+        (conv_id, conv_offset)
     ).fetchall()
     data = list()
     for row in previous_messages:
@@ -193,24 +194,25 @@ def select_previous_messages(user_id: int, conv_id: int, conv_offset: int):
     return data
 
 
-def drop_messages_after(user_id: int, conv_id: int, conv_offset: int):
+def drop_messages_after_inclusive(conv_id: int, conv_offset: int):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     # drop all messages with offset gereater than or equal to the current message conv offset
     db_cursor.execute(
-        "DROP FROM message WHERE user_id=? AND conv_id=? AND conv_offset<=?",
-        (user_id, conv_id, conv_offset)
+        "DELETE FROM message WHERE conv_id=? AND conv_offset>=?",
+        (conv_id, conv_offset)
     )
     db_connection.commit()
     db_cursor.close()
 
 
-def insert_new_message(user_id: int, conv_id: int, conv_offset: int, sender_role: str, content: str):
+def insert_new_message(conv_id: int, conv_offset: int, sender_role: str, content: str):
+    print(f"inserting message with offset {conv_offset}")
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     db_cursor.execute(
-        "INSERT INTO message (user_id, conv_idm conv_offset, sender_role, content) VALUES (?,?,?,?,?)",
-        (user_id, conv_id, conv_offset, sender_role, content)
+        "INSERT INTO message (conv_id, conv_offset, sender_role, content) VALUES (?,?,?,?)",
+        (conv_id, conv_offset, sender_role, content)
     )
     db_connection.commit()
     db_cursor.close()

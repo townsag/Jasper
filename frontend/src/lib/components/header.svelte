@@ -1,4 +1,4 @@
-<nav class='p-2'>
+<nav class='w-full p-2'>
     <ul class="flex flex-row w-full justify-end space-x-2">
         <li>
             <div class="rounded-md bg-jax-purple p-2">

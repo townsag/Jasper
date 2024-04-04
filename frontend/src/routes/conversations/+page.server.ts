@@ -4,7 +4,7 @@ export async function load(event){
     console.log("in conversations page.server.ts");
     if(!event.locals.user){
         console.log("no user so redirecting");
-        // throw redirect(302, '/');
+        throw redirect(302, '/');
     }
 
     // load the conversation history from the flask api
@@ -36,12 +36,12 @@ export const actions: Actions = {
         // ToDo: redirect to the conversation page
     },
 
-    viewConversation: async (event) => {
-        // console.log(event);
-        const data = await event.request.formData();
-        console.log(data.get("conv_id"));
-        const conv_id = event.url.searchParams.get('conv_id');
-        console.log(data);
-        console.log(conv_id);
-    }
+    // viewConversation: async (event) => {
+    //     // console.log(event);
+    //     const data = await event.request.formData();
+    //     console.log(data.get("conv_id"));
+    //     const conv_id = event.url.searchParams.get('conv_id');
+    //     console.log(data);
+    //     console.log(conv_id);
+    // }
 };

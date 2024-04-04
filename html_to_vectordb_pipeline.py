@@ -38,13 +38,14 @@ def main():
 
         for page_number, page_data in enumerate(data):
             page_url = page_data["source"]
-            page_content = page_data["chunks"]
-            page_chunks = chunk(BeautifulSoup(page_content, features="lxml"), CHUNK_MAX_TOKENS, encoding)
-            print(f"\tDEBUG: num chunks {len(page_chunks)}")
-
             if "_src" in page_url:
                 print("=====skipping: ", page_url)
                 continue
+
+            print(f"\tDEBUG parsing {page_url}")
+            page_content = page_data["chunks"]
+            page_chunks = chunk(BeautifulSoup(page_content, features="lxml"), CHUNK_MAX_TOKENS, encoding)
+            print(f"\tDEBUG: num chunks {len(page_chunks)}")
             
             # To embed multiple inputs in a single request, pass an array of strings or array of token arrays
             MAX_BATCH_SIZE = 2048
@@ -87,9 +88,7 @@ def main():
             insert_result = jax_rag_collection.data.insert_many(data_to_store)
             print(f"errors: {insert_result.errors}")
             if page_number % 10 == 0:
-                print(f"\n\ntotal tokens so far: {total_tokens}\n")
-
-        print("total tokens: ", total_tokens)
+                print(f"\n\npages so far: {page_number} total tokens so far: {total_tokens}\n")
 
     finally:
         client_WV.close()
@@ -97,6 +96,7 @@ def main():
         input_file.close()
         output_file.close()
         end = time.time()
+        print("total tokens: ", total_tokens)
         print(f"total elapsed seconds: {end - start}")
 
 

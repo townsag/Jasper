@@ -46,6 +46,9 @@ def _chunk_node(node: Any, text: str, last_end: int = 0) -> List[str]:
         if child.end_byte - child.start_byte > MAX_CHARS:
             # Child is too big, recursively chunk the child
             child_chunks = _chunk_node(child, text, last_end)
+            if len(child_chunks) == 0:
+                print("=====weird child chunk indexing error=====")
+                continue
             if len(current_chunk) == 0:
                 new_chunks.extend(child_chunks)
             elif len(current_chunk) + len(child_chunks[0])  + len("\n") < MAX_CHARS:
@@ -80,12 +83,10 @@ def chunk(tag : bs4.element.Tag, max_chunk_size_tokens: int, encoding: tiktoken.
     # to give me an error
     chunks : list[str]= list()
     for child_tag in tag.children:
-        # ToDo: modify to treat preformatted text tags different from other tags
-        # ex: soup.find("pre").get_text()
+        # treat preformatted text tags different from other tags so they retain their formatting etc
         if child_tag.name == "pre":
             preformatted_text = child_tag.get_text()
             chunked_code = chunk_code_text(preformatted_text)
-            # ToDo
             # ToDo: add some logic for dealing with preformatted text segments that are longer than the max token chunk size
             if len(chunks) > 0 and num_tokens("\n" + chunked_code[0], encoding) + num_tokens(chunks[-1], encoding) <= max_chunk_size_tokens:
                 chunks[-1] = chunks[-1] + "\n" + chunked_code[0]
@@ -94,10 +95,7 @@ def chunk(tag : bs4.element.Tag, max_chunk_size_tokens: int, encoding: tiktoken.
                 chunks.extend(chunked_code)
             
         elif child_tag.string:
-            # print("this is child_tag.string: ", str(child_tag.string))
             temp = clean_and_split_text_input(str(child_tag.string), max_chunk_size_tokens, encoding)
-            # print("this is temp: ", temp)
-            # print("\n\n")
             if len(temp) == 0:
                 continue
             if len(chunks) > 0 and num_tokens(chunks[-1], encoding) + num_tokens(" " + temp[0], encoding) <= max_chunk_size_tokens:

@@ -20,6 +20,6 @@ CREATE TABLE message(
     message_id INTEGER PRIMARY KEY AUTOINCREMENT,
     conv_id INTEGER NOT NULL,
     conv_offset INTEGER NOT NULL,
-    sender_role TEXT CHECK(sender_role in ('user', 'bot')) NOT NULL,
+    sender_role TEXT CHECK(sender_role in ('user', 'assistant')) NOT NULL,
     content TEXT NOT NULL
 );

@@ -5,7 +5,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from chat_microservice.db import check_name_unique, insert_new_user, select_user
+from chat_microservice.db import check_name_unique, insert_new_user, select_user_by_username
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import current_user
@@ -62,7 +62,7 @@ def login():
     username = data["username"]
     password = data["password"]
 
-    data = select_user(username=username)
+    data = select_user_by_username(username=username)
     if not data:
         return jsonify({"msg":"no user with this username"}), 401
     if not check_password_hash(data["password"],password):

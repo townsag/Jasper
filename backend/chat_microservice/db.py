@@ -94,7 +94,7 @@ def insert_new_user(username: str, password_hash: str):
     return user_id
 
 
-def select_user(username: str):
+def select_user_by_username(username: str):
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     user = db_cursor.execute(
@@ -112,17 +112,39 @@ def select_user(username: str):
         }
         db_cursor.close()
         return data
+    
+def select_user_by_id(user_id: int):
+    db_connection = get_db()
+    db_cursor = db_connection.cursor()
+    user = db_cursor.execute(
+        "SELECT * FROM user WHERE user_id=?",
+        (user_id,)
+    ).fetchone()
+    if not user:
+        db_cursor.close()
+        return False
+    data = {
+        "user_id": user["user_id"],
+        "username": user["username"],
+        "password": user["password"]
+    }
+    db_cursor.close()
+    return data
 
 
 def select_conversation(conv_id: int):
     # ToDo: implement logic to handle errors like empty set in the select
     db_connection = get_db()
     db_cursor = db_connection.cursor()
-    # ToDo: order the output by last written date
     conversation = db_cursor.execute(
         "SELECT * FROM conversation WHERE conv_id=?",
         (conv_id,)
     ).fetchone()
+
+    if not conversation:
+        db_connection.close()
+        return False
+
     data = {
         "conv_id": conversation[0],
         "user_id": conversation[1],

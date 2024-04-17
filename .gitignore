@@ -1,6 +1,6 @@
 __pycache__
 .env
-backend/instance/*
+backend/instance/chat_microservice.sqlite
 *__pycache__
 
 frontend/.DS_Store

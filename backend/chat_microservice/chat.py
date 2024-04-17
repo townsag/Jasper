@@ -2,8 +2,6 @@ from flask import (
     Blueprint, g, jsonify, request
 )
 
-# import openai
-
 
 from chat_microservice.db import (
     drop_messages_after_inclusive,
@@ -12,7 +10,8 @@ from chat_microservice.db import (
     select_all_conversations,
     select_all_messages,
     select_conversation,
-    select_previous_messages
+    select_previous_messages,
+    select_user_by_id
 )
 
 from chat_microservice.llm import (
@@ -58,6 +57,7 @@ def conversation():
         if "conv_id" not in data:
             return jsonify({"msg": "request needs conv_id attribute"}), 400
         conv_id = data["conv_id"]
+        # ToDo: handle none return from select conversation in case of 404 conversation not found
         ret_dict = select_conversation(conv_id)
         return jsonify(ret_dict), 200
 
@@ -85,7 +85,7 @@ def new_message():
     user_id = get_jwt_identity()
     data = request.get_json()
     if "conv_id" not in data:
-        return jsonify({"msg": "request must containe conv_id"}), 400
+        return jsonify({"msg": "request must contain conv_id"}), 400
     if "conv_offset" not in data:
         return jsonify({"msg": "request must contain conv_offset"}), 400
     if "content" not in data:
@@ -93,6 +93,17 @@ def new_message():
     conv_id = data["conv_id"]
     incoming_user_message_offset = data["conv_offset"]
     incoming_user_message_content = data["content"]
+
+    # check that the userId and convId are a valid pair, the user associated with that conversation must be the same user
+    conversation = select_conversation(conv_id=conv_id)
+    user = select_user_by_id()
+    if not user:
+        return jsonify({"msg": f"user with user_id: {user_id} not found"}, 404)
+    if not conversation:
+        return jsonify({"msg": f"Conversation with conv_id {conv_id} not found"}, 404)
+    if user["user_id"] != conversation["user_id"]:
+        return jsonify({"msg": "you do not have permission to message this conversation"}, 403)
+
     # send user message to oai endpoint to get a text embedding
     # send text embedding to vector database to search for relevant context
     # read the conversation history up to this point (before the message conv_offset)

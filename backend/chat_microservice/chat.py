@@ -36,9 +36,12 @@ def test_route():
 @jwt_required()
 def all_conversations():
     user_id = get_jwt_identity()
+    user = select_user_by_id(user_id=user_id)
+    if not user:
+        return jsonify({"msg": f"user with user_id {user_id} not found"}, 404)
     data = select_all_conversations(user_id)
     if not data:
-        return jsonify({"msg": f"no conversations associated with user_id: {user_id}"}, 404)
+        data = list()
     return jsonify(data), 200
 
 

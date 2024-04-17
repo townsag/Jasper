@@ -22,7 +22,17 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # ToDo: separate out the logic to initialize the the database, blueprints, extentions, etc.
+    connect_blueprints_and_resources(app=app)
+
+    from flask_jwt_extended import JWTManager
+    # ToDo: store JWT secret key in config file
+    app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+    # ToDo: is this doing anything or can it be removed
+    jwt = JWTManager(app)
+
+    return app
+
+def connect_blueprints_and_resources(app):
     from . import db
     db.init_app(app)
 
@@ -34,14 +44,3 @@ def create_app(test_config=None):
 
     from . import chat
     app.register_blueprint(chat.chat_bp)
-
-    from flask_jwt_extended import JWTManager
-    app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
-    jwt = JWTManager(app)
-
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return f'Hello, World! {app.instance_path}'
-
-    return app

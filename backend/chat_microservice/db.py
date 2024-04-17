@@ -161,10 +161,15 @@ def select_all_conversations(user_id: int):
     db_cursor = db_connection.cursor()
     # ToDo: i am suspicious that this is not actually selecting the conversations in the correct order
     user_conversations = db_cursor.execute(
-        "SELECT * FROM conversation WHERE user_id=? ORDER BY DATE(most_recent_entry_date) DESC",
+        "SELECT * FROM conversation WHERE user_id=? ORDER BY most_recent_entry_date DESC",
         (user_id,)
     ).fetchall()
     data = list()
+
+    if not user_conversations:
+        db_cursor.close()
+        return False
+    
     for conversation in user_conversations:
         data.append({
             "conv_id": conversation[0],

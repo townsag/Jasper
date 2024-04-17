@@ -2,6 +2,8 @@ from flask import (
     Blueprint, g, jsonify, request
 )
 
+import sqlite3
+
 
 from chat_microservice.db import (
     drop_messages_after_inclusive,
@@ -36,6 +38,11 @@ def test_route():
 @jwt_required()
 def all_conversations():
     user_id = get_jwt_identity()
+    # try:
+    #     user = select_user_by_id(user_id=user_id)
+    # except sqlite3.Error as e:
+    #     print(f"{e.sqlite_errorname}: {e.sqlite_errorcode}")
+    #     return jsonify({"msg": "database error when accessing user data"}, 500)
     user = select_user_by_id(user_id=user_id)
     if not user:
         return jsonify({"msg": f"user with user_id {user_id} not found"}, 404)
@@ -101,7 +108,7 @@ def new_message():
 
     # check that the userId and convId are a valid pair, the user associated with that conversation must be the same user
     conversation = select_conversation(conv_id=conv_id)
-    user = select_user_by_id()
+    user = select_user_by_id(user_id=user_id)
     if not user:
         return jsonify({"msg": f"user with user_id: {user_id} not found"}, 404)
     if not conversation:

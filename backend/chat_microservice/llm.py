@@ -44,6 +44,7 @@ def get_assistant_completion(messages: list[str]):
     ).choices[0].message
     return completion_obj.content
 
+# ToDo: add some error handling for getting rate limited by llm api etc
 # get assistant completion rag modifies the contents of the messages list
 def get_assistant_completion_rag(messages: list[str]):
     # config = dotenv_values(".env")
@@ -54,6 +55,7 @@ def get_assistant_completion_rag(messages: list[str]):
     oai_client = get_oai_client()
     wv_client = get_wv_client()
 
+    # ToDo: this implies an in order list
     query = messages[-1]["content"]
     query_embed_response = oai_client.embeddings.create(input=query, model="text-embedding-3-small")
     query_embed_vector = query_embed_response.data[0].embedding

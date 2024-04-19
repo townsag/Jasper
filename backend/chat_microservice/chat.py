@@ -62,15 +62,17 @@ def conversation():
         return jsonify({"conv_id": new_conv_id}), 200
     elif request.method == "GET":
         # return information about the conversation that the user wants to have
-        # ToDo: this will break on the client side because fetch doenst like
-        # taking JSON input for the request body
-        # change to use arguments in the get request instead of JSON body
-        data = request.get_json()
-        if "conv_id" not in data:
+        conv_id = request.args.get("conv_id")
+        if not conv_id:
             return jsonify({"msg": "request needs conv_id attribute"}), 400
-        conv_id = data["conv_id"]
-        # ToDo: handle none return from select conversation in case of 404 conversation not found
+
         ret_dict = select_conversation(conv_id)
+        if not ret_dict:
+            return jsonify({"msg": "no conversation found with that conv_id"}), 404
+
+        if ret_dict["user_id"] != user_id:
+            return jsonify({"msg":"attempting to view a conversation that does not beling to this user"}), 403
+
         return jsonify(ret_dict), 200
 
 
@@ -78,6 +80,7 @@ def conversation():
 @jwt_required()
 def all_messages():
     # user_id = get_jwt_identity()
+    # ToDo: test this more thuroughly, this might have unexpected behavior
     conv_id = request.args.get("conv_id")
     if not conv_id:
         return jsonify({"msg": "request needs to include \"conv_id\""}), 400
@@ -126,8 +129,8 @@ def new_message():
                  "content": message["content"]} for message in conv_history]
     messages.append({"role":"user", "content":incoming_user_message_content})
     print("inside /newMessage, messages list: \n")
-    for message in messages:
-        print(message)
+    # for message in messages:
+    #     print(message)
     # oai_chat_completion_stub = f"this is assistant response at offset {incoming_user_message_offset + 1}"
     # assistant_message = get_assistant_completion(messages=messages)
     assistant_message = get_assistant_completion_rag(messages)
@@ -135,6 +138,9 @@ def new_message():
     print(assistant_message)
     # append context to last message
     # send in order message conversation history with context to oai endpoint
+    # ToDo: this should really be only one transaction so that any SQL errors that
+    # happen to one of these three transactions doesnt create an inconsistent state in
+    # the database (ex: missing messages or wrong offset)
     drop_messages_after_inclusive(conv_id, incoming_user_message_offset)
     # add the user message to the database
     insert_new_message(conv_id, incoming_user_message_offset,

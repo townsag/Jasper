@@ -7,14 +7,16 @@ def create_app(test_config=None):
         SECRET_KEY='dev', 
         DATABASE=os.path.join(app.instance_path, "chat_microservice.sqlite")
         )
-    app.config.from_pyfile("config.py", silent=False)
-    print(app.config)
-    # if test_config is None:
-    #     # load the instance config, if it exists, when not testing
-    #     app.config.from_pyfile('config.py', silent=True)
-    # else:
-    #     # load the test config if passed in
-    #     app.config.from_mapping(test_config)
+
+    # this allows us to load a different configuration at test time
+    # the default behavior (loading the instance config) will still work the same
+    # in the absence of a test config
+    if test_config is None:
+        # load the instance config, if it exists, when not testing
+        app.config.from_pyfile('config.py', silent=True)
+    else:
+        # load the test config if passed in
+        app.config.from_mapping(test_config)
 
     # ensure the instance folder exists
     try:
@@ -29,6 +31,11 @@ def create_app(test_config=None):
     app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
     # ToDo: is this doing anything or can it be removed
     jwt = JWTManager(app)
+
+        # a simple page that says hello
+    @app.route('/hello')
+    def hello():
+        return 'Hello, World!'
 
     return app
 

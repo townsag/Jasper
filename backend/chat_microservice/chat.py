@@ -2,8 +2,6 @@ from flask import (
     Blueprint, g, jsonify, request
 )
 
-import sqlite3
-
 
 from chat_microservice.db import (
     drop_messages_after_inclusive,

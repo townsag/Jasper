@@ -4,17 +4,11 @@ from flask import (
     Blueprint, g, jsonify, request
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from flask_jwt_extended import create_access_token, get_jwt, jwt_required
 
 from chat_microservice.db import check_name_unique, insert_new_user, select_user_by_username
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import current_user
-from flask_jwt_extended import get_jwt, jwt_required
-
-from chat_microservice.db import get_db
-
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
-
 
 # @bp.before_app_request
 # def load_logged_in_user():
@@ -31,9 +25,9 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
-    if "username" not in data:
+    if "username" not in data or data["username"] == "":
         return jsonify({"msg": "request json must include \"username\""}), 400
-    if "password" not in data:
+    if "password" not in data or data["password"] == "":
         return jsonify({"msg": "request json must include \"password\""}), 400
     username = data["username"]
     password = data["password"]
@@ -55,9 +49,9 @@ def register():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
-    if "username" not in data:
+    if "username" not in data or data["username"] == "":
         return jsonify({"msg": "request json must include \"username\""}), 400
-    if "password" not in data:
+    if "password" not in data or data["password"] == "":
         return jsonify({"msg": "request json must include \"password\""}), 400
     username = data["username"]
     password = data["password"]
@@ -65,7 +59,7 @@ def login():
     data = select_user_by_username(username=username)
     if not data:
         return jsonify({"msg":"no user with this username"}), 401
-    if not check_password_hash(data["password"],password):
+    if not check_password_hash(data["password"], password):
         return jsonify({"msg":"username or password incorrect"}), 401
     
     user_id = data["user_id"]

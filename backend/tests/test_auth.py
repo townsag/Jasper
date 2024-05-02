@@ -3,9 +3,11 @@ import json
 from chat_microservice.db import get_db
 
 def test_register(client, app):
-    response = client.post("/auth/register", 
-                           data=json.dumps({"username":"a", "password":"a"}), 
-                           content_type="application/json")
+    response = client.post(
+        "/auth/register", 
+        data=json.dumps({"username":"a", "password":"a"}), 
+        content_type="application/json"
+    )
     # check that the request was successful
     assert response.status_code == 200
     # check that the response contains a JWT
@@ -27,23 +29,28 @@ def test_register(client, app):
         )
 )
 def test_register_validate_inputs(client, username, password, message):
-    response = client.post("/auth/register",
-                           data=json.dumps({"username":username, "password":password}),
-                           content_type="application/json"
-                           )
+    response = client.post(
+        "/auth/register",
+        data=json.dumps({"username":username, "password":password}),
+        content_type="application/json"
+    )
     assert message in response.get_data(as_text=True)
 
 def test_whoami(client):
-    response_register = client.post("/auth/register",
-                                    data=json.dumps({"username":"test", "password":"test"}),
-                                    headers={
-                                        "Content-Type":"application/json"
-                                    })
+    response_register = client.post(
+        "/auth/register",
+        data=json.dumps({"username":"test", "password":"test"}),
+        headers={
+            "Content-Type":"application/json"
+        }
+    )
     jwt_str = json.loads(response_register.get_data(as_text=True)).get("access_token", None)
-    response_whoami = client.get("/auth/whoami",
-                                 headers={
-                                     "Authorization":f"Bearer {jwt_str}"
-                                 })
+    response_whoami = client.get(
+        "/auth/whoami",
+        headers={
+            "Authorization":f"Bearer {jwt_str}"
+        }
+    )
     assert response_whoami.status_code == 200
     assert "test" in response_whoami.get_data(as_text=True)
 
@@ -51,6 +58,7 @@ def test_whoami_unauthenticated(client):
     response_whoami = client.get("/auth/whoami")
     assert response_whoami.status_code == 401
 
+# ToDo: should send a msg in the respone to the get request even on a successful login
 def test_login(client, auth):
     response_login = auth.login()
     assert response_login.status_code == 200
@@ -58,10 +66,12 @@ def test_login(client, auth):
     jwt_str = json.loads(response_login.get_data(as_text=True)).get("access_token", None)
     assert jwt_str is not None
 
-    response_who_am_i = client.get("/auth/whoami", 
-                                   headers={
-                                       "Authorization":f"Bearer {jwt_str}"
-                                   })
+    response_who_am_i = client.get(
+        "/auth/whoami", 
+        headers={
+            "Authorization":f"Bearer {jwt_str}"
+        }
+    )
     assert response_who_am_i.status_code == 200
     assert "asdf" == json.loads(response_who_am_i.get_data(as_text=True)).get("username", None)
 

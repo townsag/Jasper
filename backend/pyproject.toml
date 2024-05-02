@@ -1,0 +1,17 @@
+[project]
+name = "chat-microservice"
+version = "1.0.0"
+description = "This is the backend server for Jasper, the chat application for talking to JAX documentation"
+dependencies = [
+    "flask",
+    "flask_jwt_extended",
+    "datetime",
+    "click",
+    "openai",
+    "python-dotenv",
+    "weaviate-client",
+]
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"

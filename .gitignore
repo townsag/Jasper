@@ -2,6 +2,7 @@ __pycache__
 .env
 backend/instance/chat_microservice.sqlite
 *__pycache__
+backend/.pytest_cache
 
 frontend/.DS_Store
 frontend/node_modules

@@ -64,6 +64,15 @@ class AuthActions(object):
             data=json.dumps({"username":username, "password":password}),
             content_type="application/json"
         )
+    
+    def login_with_jwt(self, username="asdf", password="asdf"):
+        response = self._client.post(
+            "/auth/login",
+            data=json.dumps({"username":username, "password":password}),
+            content_type="application/json"
+        )
+        JWT_str = json.loads(response.get_data(as_text=True)).get("access_token", None)
+        return JWT_str, response
 
     # loggout is done on the client side by deleting the JWT
     # def logout(self):

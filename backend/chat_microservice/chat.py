@@ -36,6 +36,7 @@ def test_route():
 @jwt_required()
 def all_conversations():
     user_id = get_jwt_identity()
+    # ToDo: handle errors from the database
     # try:
     #     user = select_user_by_id(user_id=user_id)
     # except sqlite3.Error as e:
@@ -43,7 +44,7 @@ def all_conversations():
     #     return jsonify({"msg": "database error when accessing user data"}, 500)
     user = select_user_by_id(user_id=user_id)
     if not user:
-        return jsonify({"msg": f"user with user_id {user_id} not found"}, 404)
+        return jsonify({"msg": f"user with user_id {user_id} not found"}), 404
     data = select_all_conversations(user_id)
     if not data:
         data = list()
@@ -60,6 +61,7 @@ def conversation():
         return jsonify({"conv_id": new_conv_id}), 200
     elif request.method == "GET":
         # return information about the conversation that the user wants to have
+        # add some error checking to see if the conversation id is actually a number like string etc
         conv_id = request.args.get("conv_id")
         if not conv_id:
             return jsonify({"msg": "request needs conv_id attribute"}), 400
@@ -77,11 +79,17 @@ def conversation():
 @chat_bp.route("/allMessages", methods=["GET"])
 @jwt_required()
 def all_messages():
-    # user_id = get_jwt_identity()
+    user_id = get_jwt_identity()
     # ToDo: test this more thuroughly, this might have unexpected behavior
     conv_id = request.args.get("conv_id")
     if not conv_id:
-        return jsonify({"msg": "request needs to include \"conv_id\""}), 400
+        return jsonify({"msg": "request needs to include conv_id param"}), 400
+    # check that the user is requesting access to a conversation they are a part of
+    conv_dict = select_conversation(conv_id)
+    if not conv_dict:
+        return jsonify({"msg":"no conversation found with that conv_id"}), 404
+    if user_id != conv_dict["user_id"]:
+        return jsonify({"msg":"attempting to view conversation that does not belong to this user"}), 403
     ret_list = select_all_messages(conv_id)
     return jsonify(ret_list), 200
 

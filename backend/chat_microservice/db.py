@@ -142,7 +142,7 @@ def select_conversation(conv_id: int):
     ).fetchone()
 
     if not conversation:
-        db_connection.close()
+        db_cursor.close()
         return False
 
     data = {

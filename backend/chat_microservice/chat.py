@@ -111,6 +111,10 @@ def new_message():
         return jsonify({"msg": "request must contain conv_offset"}), 400
     if "content" not in data:
         return jsonify({"msg": "request must contain content"}), 400
+    if len(data["content"]) < 1:
+        return jsonify({"msg":"message content cannot be an empty string"}), 400
+    if data["conv_offset"] < 1:
+        return jsonify({"msg":"cannot process messages with offset < 1"}), 400
     conv_id = data["conv_id"]
     incoming_user_message_offset = data["conv_offset"]
     incoming_user_message_content = data["content"]
@@ -119,29 +123,30 @@ def new_message():
     conversation = select_conversation(conv_id=conv_id)
     user = select_user_by_id(user_id=user_id)
     if not user:
-        return jsonify({"msg": f"user with user_id: {user_id} not found"}, 404)
+        return jsonify({"msg": f"user with user_id: {user_id} not found"}), 404
     if not conversation:
-        return jsonify({"msg": f"Conversation with conv_id {conv_id} not found"}, 404)
+        return jsonify({"msg": f"Conversation with conv_id {conv_id} not found"}), 404
     if user["user_id"] != conversation["user_id"]:
-        return jsonify({"msg": "you do not have permission to message this conversation"}, 403)
+        return jsonify({"msg": "you do not have permission to message this conversation"}), 403
 
-    # send user message to oai endpoint to get a text embedding
-    # send text embedding to vector database to search for relevant context
     # read the conversation history up to this point (before the message conv_offset)
     conv_history = select_previous_messages(
         conv_id, incoming_user_message_offset)
+    # check that the conv_offset of the new message is not too far in the future as to 
+    # leave conversation gap or from before time
+    hasOffsetGap = len(conv_history) > 0 and conv_history[-1]["conv_offset"] + 1 < data["conv_offset"]
+    isEarlyFirstMessage = len(conv_history) == 0 and data["conv_offset"] != 1
+    if hasOffsetGap or isEarlyFirstMessage:
+        return jsonify({"msg":"this message offset is not consistent with conversation history"}), 409
+    
     # ToDo: this is not the best syntax
     messages = [{"role": message["sender_role"],
                  "content": message["content"]} for message in conv_history]
     messages.append({"role":"user", "content":incoming_user_message_content})
-    print("inside /newMessage, messages list: \n")
-    # for message in messages:
-    #     print(message)
-    # oai_chat_completion_stub = f"this is assistant response at offset {incoming_user_message_offset + 1}"
+    # send user message to oai endpoint to get a text embedding
+    # send text embedding to vector database to search for relevant context
     # assistant_message = get_assistant_completion(messages=messages)
     assistant_message = get_assistant_completion_rag(messages)
-    print("inside /newMessage")
-    print(assistant_message)
     # append context to last message
     # send in order message conversation history with context to oai endpoint
     # ToDo: this should really be only one transaction so that any SQL errors that

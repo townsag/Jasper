@@ -1,10 +1,14 @@
 import pytest
 import json
 from chat_microservice.db import get_db
+from chat_microservice.llm import get_oai_client
 import sqlite3
 
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
+
+from openai.types import CreateEmbeddingResponse
+from openai.types import Embedding
 
 @pytest.mark.parametrize(
     ("route"),
@@ -237,13 +241,116 @@ class TestAllMessages:
         assert json.loads(response_messages.get_data(as_text=True)).get("msg") == "no conversation found with that conv_id"
 
 
-# def create_chat_completion(response: str, role: str = "assitant"):
-#     return ChatCompletion(
+# These are helper functions for the monkey patch of create embedidng and create completion in the openai api
+def create_chat_completion(response: str = "this is from mocked response", role: str = "assitant"):
+    return ChatCompletion(
+        id="na",
+        model="gpt-3.5-turbo",
+        object="chat.completion",
+        choices=[
+            Choice(
+                index=0,
+                message=ChatCompletionMessage(
+                    content=response,
+                    role=role
+                )
+            )
+        ]
+    )
 
-#     )
+def mock_create_chat(message, model):
+    return create_chat_completion()
 
-"""
+def create_embedding_response(dim = 1536):
+    return CreateEmbeddingResponse(
+        data=list(Embedding(
+            embedding=[1.0 for i in range(dim)]
+        ))
+    )
+
+def mock_create_embedding(input, model):
+    return create_embedding_response
+
+
 class TestNewMessageEndpoint:
+    # autouse the monkeypatch_open_ai fixture for the scope of this class so that it doesn't
+    # have to be called for each test function in this class
+    # ToDo: verify that this behavior is working
+    @pytest.fixture(autouse=True)
+    def monkeypatch_openai_chat(self, app, monkeypatch):
+        with app.app_context():
+            oai_client = get_oai_client()
+            monkeypatch.setattr(oai_client.chat.completions, "create", mock_create_chat)
+
+    @pytest.fixture(autouse=True)
+    def monkeypatch_openai_embedding(self, app, monkeypatch):
+        with app.app_context():
+            oai_client = get_oai_client()
+            monkeypatch.setattr(oai_client.embeddings, "create", mock_create_embedding)
+
+    # ToDo: add monkeypatch for weaviate
+
+    # what are we testing here
+    #   - post
+    #       - check that requests with non matching userid and conversation id return an error
+    #       - check that requests for conversation ids that dont exist return an error
+    #       - check that requests with "" empty content return an error
+    #       - check that requests with invalid offset return an error (in the future, 0 or negative)
+    @pytest.mark.parametrize(
+            ("conv_id", "conv_offset", "content", "expected_status", "expected_message"),
+            (
+                (3, 1, "how many doors are there", 403, "you do not have permission to message this conversation"),
+                (100, 1, "Which bear is best?", 404, "Conversation with conv_id 100 not found"),
+                (1, 3, "", 400, "message content cannot be an empty string"),
+                (1, 100, "This conversation is happening in the future", 409, "this message offset is not consistent with conversation history"),
+                (1, 0, "This message is from before time", 400, "cannot process messages with offset < 1")
+            )
+    )
+    def test_new_message_invalid(self, client, auth, conv_id, conv_offset, content, expected_status, expected_message):
+        JWT_str, _ = auth.login_with_jwt()
+        response_new_message = client.post(
+            "/chat/newMessage",
+            headers={
+                "Authorization":f"Bearer {JWT_str}",
+                "Content-Type":"application/json"
+            },
+            data=json.dumps({
+                "conv_id":conv_id,
+                "conv_offset":conv_offset,
+                "content":content
+            })
+        )
+        response_data = json.loads(response_new_message.get_data(as_text=True))
+        assert response_new_message.status_code == expected_status
+        assert response_data.get("msg") == expected_message
+    
+    # what are we testing here
+    #   - post
+    #       - if the request is missing conv_id return an error 
+    #       - if the request is missing conv_offset return an error
+    #       - if the request is missing content return an error
+    @pytest.mark.parametrize(
+            ("data_dict", "expected_message"),
+            (
+                ({"conv_offset":1, "content":"some content"}, "request must contain conv_id"),
+                ({"conv_id":1, "content":"some content"}, "request must contain conv_offset"),
+                ({"conv_id":1, "conv_offset":1}, "request must contain content")
+            )
+    )
+    def test_new_message_missing(self, auth, client, data_dict, expected_message):
+        JWT_str, _ = auth.login_with_jwt()
+        response_new_message = client.post(
+            "/chat/newMessage",
+            headers={
+                "Authorization":f"Bearer {JWT_str}",
+                "Content-Type":"application/json"
+            },
+            data=json.dumps(data_dict)
+        )
+        response_data = json.loads(response_new_message.get_data(as_text=True))
+        assert response_new_message.status_code == 400
+        assert response_data.get("msg") == expected_message
+
     # what are we testing here
     #   - post
     #       - if the username in the JWT doesnt exist return an error (this may be unreachable code without editing the JWT)
@@ -276,46 +383,3 @@ class TestNewMessageEndpoint:
     #       - check that requests with message offset in the past overwrite old data
 
 
-
-    # ToDo: add monkeypatch for weaviate and openai api
-    # what are we testing here
-    #   - post
-    #       - check that requests with non matching userid and conversation id return an error
-    #       - check that requests for conversation ids that dont exist return an error
-    #       - check that requests with "" empty content return an error
-    #       - check that requests with invalid offset return an error (in the future, 0 or negative)
-    @pytest.mark.parametrize(
-            ("conv_id", "conv_offset", "content", "expected_status", "expected_message"),
-            (
-                (3, 1, "how many doors are there", 403, "you do not have permission to message this conversation"),
-                (100, 1, "Which bear is best?", 404, "Conversation with conv_id 100 not found"),
-                (1, 3, "", 400, "message ccontent cannot be empty"),
-                (1, 100, "This conversation is happening in the future", 409, "this message offset is not consistent with conversation history"),
-                (1, 0, "This message is from before time", 400, "cannot process messages with offset < 1")
-            )
-    )
-    def test_new_message_invalid(self, client, auth, conv_id, conv_offset, content, expected_status, expected_message):
-        JWT_str, _ = auth.login_with_jwt()
-        response_new_message = client.post(
-            "/chat/newMessage",
-            headers={
-                "Authorization":f"Bearer {JWT_str}",
-                "Content-Type":"application/json"
-            },
-            data=json.dumps({
-                "conv_id":conv_id,
-                "conv_offset":conv_offset,
-                "content":content
-            })
-        )
-
-        response_data = json.loads(response_new_message.get_data(as_text=True))
-        assert response_new_message.status_code == expected_status
-        assert response_data.get("msg") == expected_message
-
-    # what are we testing here
-    #   - post
-    #       - if the request is missing conv_id return an error 
-    #       - if the request is missing conv_offset return an error
-    #       - if the request is missing content return an error
-"""

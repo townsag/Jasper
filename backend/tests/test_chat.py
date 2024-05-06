@@ -1,9 +1,10 @@
 import pytest
 import json
+import chat_microservice
 from chat_microservice.db import get_db
-from chat_microservice.llm import get_oai_client
 import sqlite3
 
+import openai
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 
@@ -242,53 +243,60 @@ class TestAllMessages:
 
 
 # These are helper functions for the monkey patch of create embedidng and create completion in the openai api
-def create_chat_completion(response: str = "this is from mocked response", role: str = "assitant"):
-    return ChatCompletion(
-        id="na",
-        model="gpt-3.5-turbo",
-        object="chat.completion",
-        choices=[
-            Choice(
-                index=0,
-                message=ChatCompletionMessage(
-                    content=response,
-                    role=role
-                )
-            )
-        ]
-    )
+# def create_chat_completion(response: str = "this is from mocked response", role: str = "assitant"):
+#     return ChatCompletion(
+#         id="na",
+#         model="gpt-3.5-turbo",
+#         object="chat.completion",
+#         choices=[
+#             Choice(
+#                 index=0,
+#                 message=ChatCompletionMessage(
+#                     content=response,
+#                     role=role
+#                 )
+#             )
+#         ]
+#     )
 
-def mock_create_chat(message, model):
-    return create_chat_completion()
+# def mock_create_chat(message, model):
+#     return create_chat_completion()
+# monkeypatch.setattr(oai_client.chat.completions, "create", mock_create_chat)
 
-def create_embedding_response(dim = 1536):
-    return CreateEmbeddingResponse(
-        data=list(Embedding(
-            embedding=[1.0 for i in range(dim)]
-        ))
-    )
+# def create_embedding_response(dim = 1536):
+#     return CreateEmbeddingResponse(
+#         data=list(Embedding(
+#             embedding=[1.0 for i in range(dim)]
+#         ))
+#     )
 
-def mock_create_embedding(input, model):
-    return create_embedding_response
+# def mock_create_embedding(input, model):
+#     return create_embedding_response
+
+def mock_make_embedding_vector(query, model="some-model"):
+    return [1.0 for i in range(1536)]
+
+def mock_retrieve_relevant_context(query_embed_vector: list[float], collection_name: str,  k: int = 2):
+    return [f"this is dummy context {i}" for i in range(k)]
+
+def mock_get_chat_completion(messages, model="some-model"):
+    return "this is from mocked response"
 
 
 class TestNewMessageEndpoint:
-    # autouse the monkeypatch_open_ai fixture for the scope of this class so that it doesn't
+    # autouse the monkeypatch_openai fixture for the scope of this class so that it doesn't
     # have to be called for each test function in this class
-    # ToDo: verify that this behavior is working
     @pytest.fixture(autouse=True)
     def monkeypatch_openai_chat(self, app, monkeypatch):
-        with app.app_context():
-            oai_client = get_oai_client()
-            monkeypatch.setattr(oai_client.chat.completions, "create", mock_create_chat)
+        monkeypatch.setattr(chat_microservice.llm, "get_chat_completion", mock_get_chat_completion)
 
     @pytest.fixture(autouse=True)
     def monkeypatch_openai_embedding(self, app, monkeypatch):
-        with app.app_context():
-            oai_client = get_oai_client()
-            monkeypatch.setattr(oai_client.embeddings, "create", mock_create_embedding)
+        monkeypatch.setattr(chat_microservice.llm, "make_embedding_vector", mock_make_embedding_vector)
 
-    # ToDo: add monkeypatch for weaviate
+    @pytest.fixture(autouse=True)
+    def monkeypatch_weaviate_retrival(self, app, monkeypatch):
+        monkeypatch.setattr(chat_microservice.llm, "retrieve_relevant_context", mock_retrieve_relevant_context)
 
     # what are we testing here
     #   - post
@@ -353,7 +361,10 @@ class TestNewMessageEndpoint:
 
     # what are we testing here
     #   - post
-    #       - if the username in the JWT doesnt exist return an error (this may be unreachable code without editing the JWT)
+    #       - if the username in the JWT doesn't exist return an error (this may be unreachable code without editing the JWT)
+
+    # what are we testing here
+    #   - post
     #       - if the open ai api call fails we should return an error and not store the users message in the database
     #           - use monkeypatch to simulate failure behavior of open ai client completion
 
@@ -366,6 +377,7 @@ class TestNewMessageEndpoint:
     #   - post
     #       - if the write to the database for the user message fails we should return an error
     #           - use monkeypatch to simulate sqlite failure behavior
+    #       - also only write both of the messages or niether of the messages
 
     # what are we testing here
     #   - post
@@ -376,10 +388,84 @@ class TestNewMessageEndpoint:
     #   - post
     #       - test that the new message is inserted into the database
     #       - test that the agent completion is inserted into the database
-    #           - use monkeypatch to overwrite successful behavior of open ai api call
+    #           - use monkeypatch to overwrite successful behavior of open ai api calls (embedding, completion)
+    #           - use monkeypatch to overwrite successful behavior of weaviate search
+    def test_new_message_success(self, app, client, auth):
+        JWT_str, _ = auth.login_with_jwt()
+        response_new_message = client.post(
+            "/chat/newMessage",
+            headers={
+                "Authorization":f"Bearer {JWT_str}",
+                "Content-Type":"application/json"
+            },
+            data=json.dumps({
+                "conv_id":2,
+                "conv_offset":3,
+                "content":"This is the user message"
+            })
+        )
+        response_data = json.loads(response_new_message.get_data(as_text=True))
+        assert response_new_message.status_code == 200
+        assert response_data.get("conv_offset") == 4
+        assert response_data.get("sender_role") == "assistant"
+        assert response_data.get("content") == "this is from mocked response"
+
+        # check that the correct information was added to the database
+        with app.app_context():
+            db_connection = get_db()
+            db_cursor = db_connection.cursor()
+            ret_rows = db_cursor.execute(
+                "SELECT * FROM message WHERE conv_id=?",
+                (2,)
+            ).fetchall()
+            assert len(ret_rows) == 4
+            assert ret_rows[-2]["conv_offset"] == 3
+            assert ret_rows[-2]["sender_role"] == "user"
+            assert ret_rows[-2]["content"] == "This is the user message"
+            assert ret_rows[-1]["conv_offset"] == 4
+            assert ret_rows[-1]["sender_role"] == "assistant"
+            assert ret_rows[-1]["content"] == "this is from mocked response"
+            db_cursor.close()
 
     # what are we testing here
     #   - post
     #       - check that requests with message offset in the past overwrite old data
+    def test_new_message_overwrite(self, app, client, auth):
+        JWT_str, _ = auth.login_with_jwt()
+        response_new_message = client.post(
+            "/chat/newMessage",
+            headers={
+                "Authorization":f"Bearer {JWT_str}",
+                "Content-Type":"application/json"
+            },
+            data=json.dumps({
+                "conv_id":2,
+                "conv_offset":1,
+                "content":"This is the user message"
+            })
+        )
+        response_data = json.loads(response_new_message.get_data(as_text=True))
+        assert response_new_message.status_code == 200
+        assert response_data.get("conv_offset") == 2
+        assert response_data.get("sender_role") == "assistant"
+        assert response_data.get("content") == "this is from mocked response"
+
+        # check that the correct information was added to the database
+        with app.app_context():
+            db_connection = get_db()
+            db_cursor = db_connection.cursor()
+            ret_rows = db_cursor.execute(
+                "SELECT * FROM message WHERE conv_id=?",
+                (2,)
+            ).fetchall()
+            assert len(ret_rows) == 2
+            assert ret_rows[-2]["conv_offset"] == 1
+            assert ret_rows[-2]["sender_role"] == "user"
+            assert ret_rows[-2]["content"] == "This is the user message"
+            assert ret_rows[-1]["conv_offset"] == 2
+            assert ret_rows[-1]["sender_role"] == "assistant"
+            assert ret_rows[-1]["content"] == "this is from mocked response"
+            db_cursor.close()
+
 
 

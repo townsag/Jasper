@@ -105,6 +105,7 @@ def all_messages():
 def new_message():
     user_id = get_jwt_identity()
     data = request.get_json()
+    # input checks
     if "conv_id" not in data:
         return jsonify({"msg": "request must contain conv_id"}), 400
     if "conv_offset" not in data:
@@ -119,6 +120,7 @@ def new_message():
     incoming_user_message_offset = data["conv_offset"]
     incoming_user_message_content = data["content"]
 
+    # user and conversation value checks
     # check that the userId and convId are a valid pair, the user associated with that conversation must be the same user
     conversation = select_conversation(conv_id=conv_id)
     user = select_user_by_id(user_id=user_id)
@@ -129,6 +131,7 @@ def new_message():
     if user["user_id"] != conversation["user_id"]:
         return jsonify({"msg": "you do not have permission to message this conversation"}), 403
 
+    # offset value checks
     # read the conversation history up to this point (before the message conv_offset)
     conv_history = select_previous_messages(
         conv_id, incoming_user_message_offset)
@@ -140,12 +143,12 @@ def new_message():
         return jsonify({"msg":"this message offset is not consistent with conversation history"}), 409
     
     # ToDo: this is not the best syntax
-    messages = [{"role": message["sender_role"],
-                 "content": message["content"]} for message in conv_history]
+    messages = [{"role": message["sender_role"], "content": message["content"]} for message in conv_history]
     messages.append({"role":"user", "content":incoming_user_message_content})
     # send user message to oai endpoint to get a text embedding
     # send text embedding to vector database to search for relevant context
     # assistant_message = get_assistant_completion(messages=messages)
+    print("this is messages in new message endpoint", messages)
     assistant_message = get_assistant_completion_rag(messages)
     # append context to last message
     # send in order message conversation history with context to oai endpoint
@@ -166,8 +169,3 @@ def new_message():
         "content": assistant_message
     }), 200
     # Backlog: allow the user to optionally view the appended context from vector db
-
-
-# def get_client_OAI():
-#     if g.client_OAI is not None:
-#         return g.client_OAI

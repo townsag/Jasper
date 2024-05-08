@@ -1,5 +1,13 @@
 import { redirect, type Actions } from "@sveltejs/kit";
 
+interface Conversation {
+    conv_id: number,
+    user_id: number,
+    tag_description: string,
+    started_date: string,
+    most_recent_entry_date: string
+}
+
 export async function load(event){
     console.log("in conversations page.server.ts");
     if(!event.locals.user){
@@ -15,13 +23,16 @@ export async function load(event){
         }
     });
     // console.log(response);
-    const conversations = await response.json();
+    // ToDo: failing to load conversations should show some type of error
 
     console.log("inside conversations page server load function");
-    // console.log(conversations);
-    return {
-        conversations
-    };
+    if (response.ok) {
+        const conversations: Conversation[] = await response.json();
+        return { conversations };
+    } else {
+        const conversations: Conversation[] = [];
+        return { conversations };
+    }
 }
 
 export const actions: Actions = {
@@ -33,15 +44,7 @@ export const actions: Actions = {
                 'Authorization':`Bearer ${event.locals.user.token}`
             },
         });
-        // ToDo: redirect to the conversation page
+        // ToDo: starting a new conversation should redirect to the new conversation page
+        // ToDo: failing to start a new conversation should show some sort of error
     },
-
-    // viewConversation: async (event) => {
-    //     // console.log(event);
-    //     const data = await event.request.formData();
-    //     console.log(data.get("conv_id"));
-    //     const conv_id = event.url.searchParams.get('conv_id');
-    //     console.log(data);
-    //     console.log(conv_id);
-    // }
 };

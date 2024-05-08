@@ -49,7 +49,7 @@
                 <button formaction="?/register" class="bg-jax-purple rounded-xl p-1 w-full text-slate-200">Register</button>
             </div>
             {#if form?.error}
-                <div class="w-full bg-slate-500  rounded-md p-1">{form.error}</div>
+                <div class="w-full bg-slate-500  rounded-md p-1 text-center">{form.error}</div>
             {/if}
         </form>
     </section>

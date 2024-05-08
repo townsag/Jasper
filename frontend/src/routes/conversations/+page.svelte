@@ -1,20 +1,23 @@
 <script lang="ts">
-    console.log("inside conversations page script js");
 	import { goto } from '$app/navigation';
-
-    // interface ConversationData {
-    //     conv_id: number;
-    //     user_id: number;
-    //     tag_description: string;
-    //     started_date: string;
-    //     most_recent_entry_date: string;
-    // };
-    
-    // console.log("conversations js 2");
     import Header from '$lib/components/header.svelte';
-    // console.log("conversations js 3");
-    export let data;
-    // console.log("conversations.js 4");
+	import type { ActionData } from '../$types';
+    
+    interface ConversationData {
+        conv_id: number;
+        user_id: number;
+        tag_description: string;
+        started_date: string;
+        most_recent_entry_date: string;
+    };
+
+    interface LoadData {
+        conversations: ConversationData[];
+        error?: string;
+    }
+
+    export let data: LoadData;
+    export let form: ActionData;
 </script>
 
 <Header />
@@ -27,6 +30,18 @@
         <form action="?/newConversation" method="POST">
             <button class="bg-jax-blue hover:bg-jax-blue-hover w-full min-h-24 rounded-md text-3xl text-slate-200">New Conversation</button>
         </form>
+        {#if data?.error}
+            <div class="w-full rounded-md border-2 border-rose-500 text-rose-500 text-xl text-center">
+                {data.error}
+            </div>
+        {/if}
+
+        {#if form?.error}
+            <div class="w-full rounded-md border-2 border-rose-500 text-rose-500 text-xl text-center">
+                {form.error}
+            </div>      
+        {/if}
+
         {#each data.conversations as conversation}
             <button class="bg-slate-800 hover:bg-slate-700 flex flex-row min-h-24 justify-between items-center p-4 w-full rounded-md"
                     on:click={ () => goto(`/conversations/${conversation.conv_id}`) }>
@@ -35,10 +50,10 @@
                 the user is authenticated and to get the messages from thed database. 
                 ToDo: test this navigation to see if it is consitent with what we want-->
                 <input type="hidden" name="conv_id" value={conversation.conv_id} />
-                <h2 class="text-3xl text-slate-50">{conversation["tag_description"]}</h2>
+                <h2 class="text-3xl text-slate-50">{conversation.tag_description}</h2>
                 <div class="flex flex-col space-y-1">
-                    <p class="text-md text-slate-50">{conversation["started_date"]}</p>
-                    <p class="text-md text-slate-50">{conversation["most_recent_entry_date"]}</p>
+                    <p class="text-md text-slate-50">{conversation.started_date}</p>
+                    <p class="text-md text-slate-50">{conversation.most_recent_entry_date}</p>
                 </div>
             </button>
         {/each}

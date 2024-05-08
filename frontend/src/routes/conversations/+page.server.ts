@@ -1,4 +1,4 @@
-import { redirect, type Actions } from "@sveltejs/kit";
+import { fail, redirect, type Actions } from "@sveltejs/kit";
 
 interface Conversation {
     conv_id: number,
@@ -6,6 +6,10 @@ interface Conversation {
     tag_description: string,
     started_date: string,
     most_recent_entry_date: string
+}
+
+interface NewConversationData {
+    conv_id: number;
 }
 
 export async function load(event){
@@ -28,10 +32,13 @@ export async function load(event){
     console.log("inside conversations page server load function");
     if (response.ok) {
         const conversations: Conversation[] = await response.json();
-        return { conversations };
+        return { conversations:conversations };
     } else {
-        const conversations: Conversation[] = [];
-        return { conversations };
+        const emptyConversations: Conversation[] = [];
+        return { 
+            conversations:emptyConversations,
+            error:"A server error occured when fetching conversations"
+        };
     }
 }
 
@@ -44,7 +51,14 @@ export const actions: Actions = {
                 'Authorization':`Bearer ${event.locals.user.token}`
             },
         });
-        // ToDo: starting a new conversation should redirect to the new conversation page
-        // ToDo: failing to start a new conversation should show some sort of error
+        
+        // starting a new conversation redirects to the new conversation page
+        // failing to start a new conversation shows an error
+        if (response.ok) {
+            const data: NewConversationData = await response.json();
+            return redirect(302, `/conversations/${data.conv_id}`);
+        } else {
+            return fail(500, {error:"Server error when starting a new conversation, please try again in a few minutes"});
+        }
     },
 };

@@ -15,6 +15,8 @@
 
 - ToDo:
     - add the little bits of important information for pytest
+        - how to run pytest tests in verbose mode
+            - pytest -v
         - how to trigger pdb on the first error
             - pytest -x --pdb
         - how to print all the fixtures applied to each test
@@ -25,3 +27,4 @@
               coverage html
         - how to allow print statements in the pytest for debugging your tests
             - pytest --capture=no
+        - __IMPORTANT__: do not try to mock the behavior of functions in modules that your code imports before the monkeypatch executes. As Anrej Karpathy would say, this is the path to suffering

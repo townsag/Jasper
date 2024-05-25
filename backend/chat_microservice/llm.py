@@ -53,6 +53,15 @@ def get_assistant_completion(messages: list[str]):
 
 # pull out the functionality using the open_ai connection and the weaviate connection to make
 # monkeypatching easier when testing
+# this is for two reasons:
+#   - mocking the entire openai client object would be a lot of boilerplate
+#   - when the chat_microservice module is imported all the imports that the chat microservice 
+#       module makes are also resolved. This happens BEFORE the monkeypatches are applied.
+#       pulling the functions that are to be patched out of functions that are imported inside
+#       chat_microservice.chat ensures that those functions arent imported before the monkeypatches
+#       are applied
+#       - this is a bit hacky and I dont like it but it is the best way that I understand to test
+#           the code so far
 def make_embedding_vector(query: str, model="text-embedding-3-small"):
     oai_client = get_oai_client()
     query_embed_response = oai_client.embeddings.create(input=query, model=model)
@@ -98,3 +107,19 @@ def get_assistant_completion_rag(messages: list[str]):
 
     agent_response = get_chat_completion(messages)
     return agent_response
+
+#   - just like above, pulling the functionality that has to be mocked out of the functions that 
+#       are imported by chat_microservice.chat is the best solution I have so far to the problem
+#       of monkeypatching the functions after they already have been imported
+def build_prompt_and_query(user_message: str, agent_message:str):
+    prompt = "This is a user message:\n" + user_message + "\n----------\n"
+    prompt += "this is an assistant message:\n" + agent_message
+    prompt += "\n----------\nPlease create a short title for that conversation using 4 words or fewer"
+    response_content = get_chat_completion([{"role":"user", "content":prompt}])
+    if len(response_content) > 30:
+        return response_content[:27] + "..."
+    else:
+        return response_content
+
+def get_conversation_title(user_message: str, agent_message: str):
+    return build_prompt_and_query(user_message, agent_message)

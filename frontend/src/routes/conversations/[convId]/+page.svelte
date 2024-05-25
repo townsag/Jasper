@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { marked } from 'marked';
+    import { SyncLoader } from 'svelte-loading-spinners';
 
     interface Message {
         conv_id: number;
@@ -116,6 +117,11 @@
                     </div> -->
                 {/if}
             {/each}
+            {#if is_loading}
+                <div class="self-start">
+                    <SyncLoader color="#4e96fd" duration="1s"/>
+                </div>
+            {/if}
         {:else}
             <p class="text-xl text-slate-50 p-2">No messages yet, type below to start the conversation</p>
         {/if}

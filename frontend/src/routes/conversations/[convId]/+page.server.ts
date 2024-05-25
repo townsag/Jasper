@@ -1,11 +1,13 @@
-import { redirect, type Actions } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
+
+interface Message {
+    conv_id: number;
+    conv_offset: number;
+    sender_role: string;
+    content: string;
+}
 
 export async function load(event) {
-    // console.log(event);
-    // console.log(event.params);
-    // console.log(event.params.slug);
-
-    console.log("in slug page server load function");
     if(!event.locals.user){
         console.log("no user so redirecting");
         throw redirect(302, '/');
@@ -20,11 +22,16 @@ export async function load(event) {
         }
     });
 
-    // console.log("response\n", response);
-    const data = await response.json();
-
-    return {
-        messages: data
-    };
+    if (response.ok) {
+        const data: Message[] = await response.json();
+        return {
+            messages: data
+        };
+    } else {
+        return {
+            messages: [],
+            error: "an error occured when loading messages"
+        };
+    }
 }
 

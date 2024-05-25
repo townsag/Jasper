@@ -234,7 +234,7 @@ def drop_messages_after_inclusive(conv_id: int, conv_offset: int):
 
 
 def insert_new_message(conv_id: int, conv_offset: int, sender_role: str, content: str):
-    print(f"inserting message with offset {conv_offset}")
+    # print(f"inserting message with offset {conv_offset}")
     db_connection = get_db()
     db_cursor = db_connection.cursor()
     db_cursor.execute(

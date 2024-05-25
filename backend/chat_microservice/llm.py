@@ -91,8 +91,8 @@ def get_assistant_completion_rag(messages: list[str]):
     context = retrieve_relevant_context(query_embed_vector, collection_name)
 
     prompt_rag = build_prompt_rag(context, query)
-    print("inside get assistant completion rag")
-    print(prompt_rag)
+    # print("inside get assistant completion rag")
+    # print(prompt_rag)
     # replace the user query with the user query augemented by the retrieved context
     messages[-1]["content"] = prompt_rag
 

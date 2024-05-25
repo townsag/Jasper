@@ -148,7 +148,7 @@ def new_message():
     # send user message to oai endpoint to get a text embedding
     # send text embedding to vector database to search for relevant context
     # assistant_message = get_assistant_completion(messages=messages)
-    print("this is messages in new message endpoint", messages)
+    # print("this is messages in new message endpoint", messages)
     assistant_message = get_assistant_completion_rag(messages)
     # append context to last message
     # send in order message conversation history with context to oai endpoint

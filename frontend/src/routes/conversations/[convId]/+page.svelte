@@ -36,6 +36,7 @@
         if (is_loading) {
             return;
         }
+        is_loading = true;
         // add the new user question to data.messages
         // Todo: add some logic to see if the messages array is populated
         // ToDo: add some logic here to check for empty user query string
@@ -79,8 +80,6 @@
             new_message_error = true;
         }
         is_loading = false;
-
-        // ToDo: display some sort of error message on unsuccessful new message
     };
 </script>
 
@@ -120,12 +119,21 @@
     </section>
 
     <section class="bg-slate-200 flex flex-row items-center max-w-3xl w-full rounded-md mx-2 mb-3">
-        <textarea class="bg-slate-200 h-36 w-full rounded-md p-2 resize-none outline-none" 
-                  type="text" 
-                  name="user-content"
-                  bind:value={user_question}></textarea>
-        <button class="bg-jax-blue h-max m-2 p-2 rounded-md hover:bg-jax-blue-hover"
-                on:click={onSubmit}>Submit</button>
+        <textarea 
+            class="bg-slate-200 h-36 w-full rounded-md p-2 resize-none outline-none"
+            name="user-content"
+            bind:value={user_question}
+        ></textarea>
+        {#if is_loading}
+            <div class="bg-gray-400 h-max m-2 p-2 rounded-md">Submit</div>
+        {:else}
+            <button 
+                class="bg-jax-blue h-max m-2 p-2 rounded-md hover:bg-jax-blue-hover"
+                on:click={onSubmit}
+                >
+                Submit
+            </button>
+        {/if}
     </section>
     
 </div>

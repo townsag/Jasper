@@ -11,12 +11,14 @@ from chat_microservice.db import (
     select_all_messages,
     select_conversation,
     select_previous_messages,
-    select_user_by_id
+    select_user_by_id,
+    update_conversation_description
 )
 
 from chat_microservice.llm import (
     get_assistant_completion,
-    get_assistant_completion_rag
+    get_assistant_completion_rag,
+    get_conversation_title
 )
 
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
@@ -150,6 +152,13 @@ def new_message():
     # assistant_message = get_assistant_completion(messages=messages)
     # print("this is messages in new message endpoint", messages)
     assistant_message = get_assistant_completion_rag(messages)
+
+    # if this is the first question answer pair in a conversation, get a short informative
+    # caption for this conversation then set that as the conversation title
+    if incoming_user_message_offset == 1:
+        title = get_conversation_title(incoming_user_message_content, assistant_message)
+        update_conversation_description(conv_id, title)
+
     # append context to last message
     # send in order message conversation history with context to oai endpoint
     # ToDo: this should really be only one transaction so that any SQL errors that

@@ -64,6 +64,16 @@ def insert_new_conversation(user_id: int):
     db_cursor.close()
     return conv_id
 
+def update_conversation_description(conv_id: int, new_description: str):
+    db_connection = get_db()
+    db_cursor = db_connection.cursor()
+    db_cursor.execute(
+        "UPDATE conversation SET tag_description=? WHERE conv_id=?",
+        (new_description, conv_id)
+    )
+    db_connection.commit()
+    db_cursor.close()
+    return
 
 def check_name_unique(username: str):
     db_connection = get_db()

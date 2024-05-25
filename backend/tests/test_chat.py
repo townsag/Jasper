@@ -4,12 +4,14 @@ import chat_microservice
 from chat_microservice.db import get_db
 import sqlite3
 
-import openai
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
+import importlib
 
-from openai.types import CreateEmbeddingResponse
-from openai.types import Embedding
+# import openai
+# from openai.types.chat import ChatCompletion, ChatCompletionMessage
+# from openai.types.chat.chat_completion import Choice
+
+# from openai.types import CreateEmbeddingResponse
+# from openai.types import Embedding
 
 @pytest.mark.parametrize(
     ("route"),
@@ -282,6 +284,9 @@ def mock_retrieve_relevant_context(query_embed_vector: list[float], collection_n
 def mock_get_chat_completion(messages, model="some-model"):
     return "this is from mocked response"
 
+def mock_get_conversation_title(user_message: str, agent_message: str):
+    return "Mocked Title"
+
 
 class TestNewMessageEndpoint:
     # autouse the monkeypatch_openai fixture for the scope of this class so that it doesn't
@@ -297,6 +302,10 @@ class TestNewMessageEndpoint:
     @pytest.fixture(autouse=True)
     def monkeypatch_weaviate_retrival(self, app, monkeypatch):
         monkeypatch.setattr(chat_microservice.llm, "retrieve_relevant_context", mock_retrieve_relevant_context)
+
+    @pytest.fixture(autouse=True)
+    def monkeypatch_create_title(self, app, monkeypatch):
+        monkeypatch.setattr(chat_microservice.llm, "build_prompt_and_query", mock_get_conversation_title)
 
     # what are we testing here
     #   - post
@@ -430,7 +439,9 @@ class TestNewMessageEndpoint:
     # what are we testing here
     #   - post
     #       - check that requests with message offset in the past overwrite old data
+    #       - since this new message is at offset 1, there should be a conversation title generated for it
     def test_new_message_overwrite(self, app, client, auth):
+        importlib.reload(chat_microservice)
         JWT_str, _ = auth.login_with_jwt()
         response_new_message = client.post(
             "/chat/newMessage",
@@ -450,6 +461,8 @@ class TestNewMessageEndpoint:
         assert response_data.get("sender_role") == "assistant"
         assert response_data.get("content") == "this is from mocked response"
 
+        # ToDo: mock the behavior of the function in llm.py that generates a conversation title 
+        # ToDo: add checks that the new conversation had its title updated
         # check that the correct information was added to the database
         with app.app_context():
             db_connection = get_db()
@@ -465,6 +478,14 @@ class TestNewMessageEndpoint:
             assert ret_rows[-1]["conv_offset"] == 2
             assert ret_rows[-1]["sender_role"] == "assistant"
             assert ret_rows[-1]["content"] == "this is from mocked response"
+
+            # next check that the name of the conversation was changed
+            ret_row = db_cursor.execute(
+                "SELECT * FROM conversation WHERE conv_id=?",
+                (2,)
+            ).fetchone()
+            assert ret_row["tag_description"] == "Mocked Title"
+            
             db_cursor.close()
 
 

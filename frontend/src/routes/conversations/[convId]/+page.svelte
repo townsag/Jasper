@@ -32,7 +32,14 @@
     let new_message_error: boolean = false;
     let is_loading: boolean = false;
 
-    const onSubmit = async () => {
+    function handleKeydown(event: KeyboardEvent) {
+        if(event.key === 'Enter' && !event.shiftKey){
+            event.preventDefault();
+            handleSubmit();
+        }
+    }
+
+    const handleSubmit = async () => {
         if (is_loading) {
             return;
         }
@@ -71,6 +78,7 @@
             messages.push(assistant_message);
             // for svelte reactivity
             messages = messages;
+            user_question = "";
             console.log("server response data", assistant_message);
         } else {
             // remove the failed user message from the ui
@@ -123,13 +131,14 @@
             class="bg-slate-200 h-36 w-full rounded-md p-2 resize-none outline-none"
             name="user-content"
             bind:value={user_question}
+            on:keydown={handleKeydown}
         ></textarea>
         {#if is_loading}
             <div class="bg-gray-400 h-max m-2 p-2 rounded-md">Submit</div>
         {:else}
             <button 
                 class="bg-jax-blue h-max m-2 p-2 rounded-md hover:bg-jax-blue-hover"
-                on:click={onSubmit}
+                on:click={handleSubmit}
                 >
                 Submit
             </button>

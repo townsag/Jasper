@@ -45,13 +45,15 @@
             return;
         }
         is_loading = true;
+
         // add the new user question to data.messages
         // Todo: add some logic to see if the messages array is populated
-        // ToDo: add some logic here to check for empty user query string
+        // design choice: if messages has undefined elements then assume that the offset of the
+        // new message should be 1. I dont know why messages would have undefined elements
         new_message_error = false;
         const user_message = {
             conv_id:Number($page.params.convId),
-            conv_offset:Number(messages.length > 0 ? messages.at(-1).conv_offset + 1 : 1),
+            conv_offset:Number(messages.length > 0 ? (messages.at(-1)?.conv_offset ?? 0) + 1 : 1),
             sender_role:"user",
             content:user_question
         };
@@ -139,7 +141,8 @@
             bind:value={user_question}
             on:keydown={handleKeydown}
         ></textarea>
-        {#if is_loading}
+        <!-- Design choice: added these checks here instead of in handleSubmit to reduce flickering in the ui and reduce number of function calls  -->
+        {#if is_loading || user_question.length < 1}
             <div class="bg-gray-400 h-max m-2 p-2 rounded-md">Submit</div>
         {:else}
             <button 

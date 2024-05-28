@@ -30,6 +30,10 @@
         - __IMPORTANT__: do not try to mock the behavior of functions in modules that your code imports before the monkeypatch executes. As Anrej Karpathy would say, this is the path to suffering
 
 - docker info:
+    - view images:
+        - sudo docker images
+    - view running and stopped containers:
+        - sudo docker ps -a 
     - build the image:
         - cd backend/
         - sudo docker build -t chat-microservice .

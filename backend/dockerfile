@@ -1,0 +1,15 @@
+FROM python:3.11
+WORKDIR /app
+# copy over the requirements file first and install the dependencies
+# this order means that we dont have to reinstall the dependencies if 
+# some of the application code changes
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# copy over the flask application code
+COPY . .
+EXPOSE 5000
+CMD flask --app chat_microservice run --host=0.0.0.0
+
+
+# core issues to address: bring over environment variables etc 
+# api keys for oai and weaviate collection info

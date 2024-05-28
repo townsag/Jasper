@@ -28,3 +28,20 @@
         - how to allow print statements in the pytest for debugging your tests
             - pytest --capture=no
         - __IMPORTANT__: do not try to mock the behavior of functions in modules that your code imports before the monkeypatch executes. As Anrej Karpathy would say, this is the path to suffering
+
+- docker info:
+    - build the image:
+        - cd backend/
+        - sudo docker build -t chat-microservice .
+    - run the container:
+        - sudo docker run -p 5000:5000 chat-microservice
+    - stop the container:
+        - sudo docker stop <container id>
+    - delete the container
+        - sudo docker rm <container id>
+    - delete the image
+        - sudo docker rmi <image name or id>
+    - What is the difference between a container and an image?
+    - What is actually being built when you build an image
+    - Why did I get the weird error when trying to connect to the flask backend from the host machine when the backend was running inside the container? ( curl: (56) Recv failure: Connection reset by peer) The error was resolved by adding --host=0.0.0.0 to the entrypoint command: CMD flask --app chat_microservice run --host=0.0.0.0 . Why did this resolve the error?
+        - Limited understanding: The flask app by default will listen on 127.0.0.1 (loopback network interface) inside the container. Even if I map 5000 on the host machine to 5000 inside the container, that mapping goes to a different network interface than the loopback network interface (probably goes to eth0 inside the container). Instead I want to set the flask app listening on all available network interfaces (this includes the network interface between the container and host machine) so that the host machine can make requests to the flask app

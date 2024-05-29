@@ -25,11 +25,9 @@ jobs:
         python-version: "3.11.6"
     - name: Install dependencies
       run: |
-        pwd
-        ls -la
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install .
+        pip install backend/
     - name: Test with pytest
       run: |
         pytest

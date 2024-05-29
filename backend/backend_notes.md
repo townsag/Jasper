@@ -49,3 +49,8 @@
     - What is actually being built when you build an image
     - Why did I get the weird error when trying to connect to the flask backend from the host machine when the backend was running inside the container? ( curl: (56) Recv failure: Connection reset by peer) The error was resolved by adding --host=0.0.0.0 to the entrypoint command: CMD flask --app chat_microservice run --host=0.0.0.0 . Why did this resolve the error?
         - Limited understanding: The flask app by default will listen on 127.0.0.1 (loopback network interface) inside the container. Even if I map 5000 on the host machine to 5000 inside the container, that mapping goes to a different network interface than the loopback network interface (probably goes to eth0 inside the container). Instead I want to set the flask app listening on all available network interfaces (this includes the network interface between the container and host machine) so that the host machine can make requests to the flask app
+
+- resource for installing pyenv:
+    - https://www.dwarmstrong.org/pyenv/
+- resource for installing docker engine:
+    - https://docs.docker.com/engine/install/debian/

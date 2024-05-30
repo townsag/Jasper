@@ -1,5 +1,8 @@
 from dotenv import load_dotenv
 import os
+
+# modify file to read env vars from the environemnt using os.environ.get("VAR-NAME")
+
 load_dotenv(".env")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

@@ -1,4 +1,5 @@
 import type { Handle } from "@sveltejs/kit";
+import { env } from '$env/dynamic/private';
 
 // check with the backend server that the user is authenticated then add the authentication information
 // to the local storage associated with the current request on the server side
@@ -12,7 +13,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         const token: string = parsed_cookies.AuthorizationToken.split("%20")[1];
         // console.log("token: ", token, "\n");
         // console.log("authorization:", `Bearer ${token}`);
-        const response = await fetch("http://127.0.0.1:5000/auth/whoami", {
+        const response = await fetch(`http://${env.PRIVATE_BACKEND_HOST}:${env.PRIVATE_BACKEND_PORT}/auth/whoami`, {
             method:"GET",
             headers: {
                 'Authorization':`Bearer ${token}`

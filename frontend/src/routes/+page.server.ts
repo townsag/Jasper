@@ -1,5 +1,6 @@
 import type { Actions, RequestEvent } from './$types';
 import { fail, redirect} from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
 interface LoginResponseData {
     access_token: string;
@@ -18,7 +19,7 @@ export const actions: Actions = {
             return fail(400, {error: "missing username or password"});
         }
         
-        const response = await fetch("http://127.0.0.1:5000/auth/login", {
+        const response = await fetch(`http://${env.PRIVATE_BACKEND_HOST}:${env.PRIVATE_BACKEND_PORT}/auth/login`, {
             method:"POST",
             headers: {
                 'Content-Type': "application/json"
@@ -64,7 +65,7 @@ export const actions: Actions = {
             return fail(400, {error: "missing username or password"});
         }
         
-        const response = await fetch("http://127.0.0.1:5000/auth/register", {
+        const response = await fetch(`http://${env.PRIVATE_BACKEND_HOST}:${env.PRIVATE_BACKEND_PORT}/auth/register`, {
             method:"POST",
             headers: {
                 'Content-Type': "application/json"

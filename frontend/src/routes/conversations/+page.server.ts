@@ -1,4 +1,5 @@
 import { fail, redirect, type Actions } from "@sveltejs/kit";
+import { env } from '$env/dynamic/private';
 
 interface Conversation {
     conv_id: number,
@@ -20,7 +21,7 @@ export async function load(event){
     }
 
     // load the conversation history from the flask api
-    const response = await fetch("http://127.0.0.1:5000/chat/allConversations", {
+    const response = await fetch(`http://${env.PRIVATE_BACKEND_HOST}:${env.PRIVATE_BACKEND_PORT}/chat/allConversations`, {
         method:"GET",
         headers: {
             'Authorization':`Bearer ${event.locals.user.token}`
@@ -45,7 +46,7 @@ export async function load(event){
 export const actions: Actions = {
     newConversation: async (event) => {
         // call the api routes to make a new conversation
-        const response = await fetch("http://127.0.0.1:5000/chat/conversation", {
+        const response = await fetch(`http://${env.PRIVATE_BACKEND_HOST}:${env.PRIVATE_BACKEND_PORT}/chat/conversation`, {
             method:"POST",
             headers: {
                 'Authorization':`Bearer ${event.locals.user.token}`

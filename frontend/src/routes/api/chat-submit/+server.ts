@@ -1,4 +1,5 @@
 import type { RequestEvent } from './$types';
+import { env } from '$env/dynamic/private';
 
 interface RequestData {
 	conv_id: number;
@@ -16,7 +17,7 @@ interface ResponseData {
 export async function POST(event: RequestEvent): Promise<Response> {
 	const { conv_id, conv_offset, content }: RequestData = await event.request.json();
 	try {
-		const response = await fetch('http://127.0.0.1:5000/chat/newMessage', {
+		const response = await fetch(`http://${env.PRIVATE_BACKEND_HOST}:${env.PRIVATE_BACKEND_PORT}/chat/newMessage`, {
 			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${event.locals.user.token}`,

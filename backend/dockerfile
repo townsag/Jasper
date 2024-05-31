@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # copy over the flask application code
 COPY . .
 EXPOSE 5000
+RUN flask --app chat_microservice init-db
 CMD flask --app chat_microservice run --host=0.0.0.0
 
 

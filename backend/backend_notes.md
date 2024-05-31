@@ -1,3 +1,8 @@
+- next steps:
+    - use the steps in this tutorial https://docs.docker.com/network/network-tutorial-standalone/ to verify that http communication exists between containers
+    - refactor frontend to use environement variables for hostname and port instead of hardcoded values
+    - look thuroughly at backend logs to figure out why it is exiting with 137
+
 - how to run the chat microservice
     - cd /Users/andrewtownsend/Desktop/ML_personal_projects/Jasper/backend
     - flask --app chat_microservice run
@@ -45,6 +50,12 @@
         - sudo docker rm <container id>
     - delete the image
         - sudo docker rmi <image name or id>
+    - show networks available to docker
+        - sudo docker network ls
+    - inspect a specific network
+        - sudo docker network inspect <name>
+    - start a terminal inside a container
+        - docker exec -it container-name sh
     - What is the difference between a container and an image?
     - What is actually being built when you build an image
     - Why did I get the weird error when trying to connect to the flask backend from the host machine when the backend was running inside the container? ( curl: (56) Recv failure: Connection reset by peer) The error was resolved by adding --host=0.0.0.0 to the entrypoint command: CMD flask --app chat_microservice run --host=0.0.0.0 . Why did this resolve the error?

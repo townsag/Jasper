@@ -13,8 +13,8 @@ services:
     ports:
       - 3000:3000
     environment:
-      - PUBLIC_BACKEND_HOST=chat-backend
-      - PUBLIC_BACKEND_PORT=3000
+      - PRIVATE_BACKEND_HOST=chat-backend
+      - PRIVATE_BACKEND_PORT=3000
 
 #   weaviate:
 #     command:

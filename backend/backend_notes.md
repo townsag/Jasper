@@ -55,7 +55,7 @@
     - inspect a specific network
         - sudo docker network inspect <name>
     - start a terminal inside a container
-        - docker exec -it container-name sh
+        - docker exec -it <container-name> sh
     - What is the difference between a container and an image?
     - What is actually being built when you build an image
     - Why did I get the weird error when trying to connect to the flask backend from the host machine when the backend was running inside the container? ( curl: (56) Recv failure: Connection reset by peer) The error was resolved by adding --host=0.0.0.0 to the entrypoint command: CMD flask --app chat_microservice run --host=0.0.0.0 . Why did this resolve the error?

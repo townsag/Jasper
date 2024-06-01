@@ -19,7 +19,9 @@ def get_oai_client():
 
 def get_wv_client():
     if "wv_client" not in g:
-        client_WV = weaviate.connect_to_local()
+        client_WV = weaviate.connect_to_local(
+            host=current_app.config["VECTOR_DB_HOSTNAME"]
+        )
         g.wv_client = client_WV
     return g.wv_client
 

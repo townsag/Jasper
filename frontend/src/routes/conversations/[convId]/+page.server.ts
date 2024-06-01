@@ -10,7 +10,7 @@ interface Message {
 
 export async function load(event) {
     if(!event.locals.user){
-        console.log("no user so redirecting");
+        // console.log("no user so redirecting");
         throw redirect(302, '/');
     }
     const conv_id = event.params.convId;

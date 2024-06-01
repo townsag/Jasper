@@ -6,10 +6,10 @@ import { env } from '$env/dynamic/private';
 export const handle: Handle = async ({ event, resolve }) => {
     const cookies: string | null = event.request.headers.get("cookie");
     const parsed_cookies: Record<string, string> = parse_cookies(cookies ?? "");
-    console.log("in hooks");
+    // console.log("in hooks");
     // console.log("parsed cookies", parsed_cookies);
     if (parsed_cookies.AuthorizationToken){
-        console.log("found authorization token");
+        // console.log("found authorization token");
         const token: string = parsed_cookies.AuthorizationToken.split("%20")[1];
         // console.log("token: ", token, "\n");
         // console.log("authorization:", `Bearer ${token}`);
@@ -24,7 +24,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         const response_data = await response.json();
         // console.log("response data", response_data);
         if(response.ok){
-            console.log("adding username to locals");
+            // console.log("adding username to locals");
             event.locals.user = {
                 username: response_data["username"],
                 token: token

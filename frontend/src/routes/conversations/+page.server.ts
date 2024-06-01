@@ -14,9 +14,9 @@ interface NewConversationData {
 }
 
 export async function load(event){
-    console.log("in conversations page.server.ts");
+    // console.log("in conversations page.server.ts");
     if(!event.locals.user){
-        console.log("no user so redirecting");
+        // console.log("no user so redirecting");
         throw redirect(302, '/');
     }
 
@@ -30,7 +30,7 @@ export async function load(event){
     // console.log(response);
     // ToDo: failing to load conversations should show some type of error
 
-    console.log("inside conversations page server load function");
+    // console.log("inside conversations page server load function");
     if (response.ok) {
         const conversations: Conversation[] = await response.json();
         return { conversations:conversations };

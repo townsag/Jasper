@@ -51,9 +51,17 @@
                 ToDo: test this navigation to see if it is consitent with what we want-->
                 <input type="hidden" name="conv_id" value={conversation.conv_id} />
                 <h2 class="text-3xl text-slate-50">{conversation.tag_description}</h2>
-                <div class="flex flex-col space-y-1">
-                    <p class="text-md text-slate-50">{conversation.started_date}</p>
-                    <p class="text-md text-slate-50">{conversation.most_recent_entry_date}</p>
+                <div class="flex flex-col items-start space-y-1 w-max">
+                    <div class="flex flex-row justify-between space-x-1 w-full">
+                        <p class="text-md text-slate-50">Started: </p>
+                        <p class="text-md text-slate-50">{(new Date(conversation.started_date)).toLocaleString()}</p>
+                    </div>
+                    <div class="flex flex-row justify-between space-x-1 w-full">
+                        <p class="text-md text-slate-50">Most Recent: </p>
+                        <p class="text-md text-slate-50">{(new Date(conversation.most_recent_entry_date)).toLocaleString()}</p>
+                    </div>
+                    <!-- <p class="text-md text-slate-50">Started: {(new Date(conversation.started_date)).toLocaleString()}</p> -->
+                    <!-- <p class="text-md text-slate-50">Most Rencent: {(new Date(conversation.most_recent_entry_date)).toLocaleString()}</p> -->
                 </div>
             </button>
         {/each}

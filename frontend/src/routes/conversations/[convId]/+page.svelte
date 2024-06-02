@@ -63,10 +63,10 @@
         // kinda hacky but it is suggested to do it this way in the svelte docs
         messages = messages;
 
-        console.log("inside conv_id slug page on submit button function");
-        console.log("user questions", user_question);
-        console.log("user message", user_message);
-        console.log("this is messages", messages);
+        // console.log("inside conv_id slug page on submit button function");
+        // console.log("user questions", user_question);
+        // console.log("user message", user_message);
+        // console.log("this is messages", messages);
 
         const server_response = await fetch("/api/chat-submit",{
             method:"POST",
@@ -82,7 +82,7 @@
             // for svelte reactivity
             messages = messages;
             user_question = "";
-            console.log("server response data", assistant_message);
+            // console.log("server response data", assistant_message);
         } else {
             // remove the failed user message from the ui
             // use assignment to trigger sveltekit reactivity

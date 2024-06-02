@@ -1,6 +1,28 @@
 version: '3.4'
 services:
+
+  chat-backend:
+    container_name: chat-backend
+    build: ./backend
+    networks:
+      - my-network
+    environment:
+      - VECTOR_DB_HOSTNAME=weaviate-db 
+  
+  chat-frontend:
+    container_name: chat-frontend
+    build: ./frontend
+    networks:
+      - my-network
+    ports:
+      - 3000:3000
+    environment:
+      - PRIVATE_BACKEND_HOST=chat-backend
+      - PRIVATE_BACKEND_PORT=5000
+      - ORIGIN=http://localhost:3000
+
   weaviate:
+    container_name: weaviate-db
     command:
     - --host
     - 0.0.0.0
@@ -9,9 +31,8 @@ services:
     - --scheme
     - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.24.2
-    ports:
-    - 8080:8080
-    - 50051:50051
+    networks:
+      - my-network
     volumes:
     - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
@@ -22,5 +43,10 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       ENABLE_MODULES: ''
       CLUSTER_HOSTNAME: 'node1'
+
 volumes:
     weaviate_data:
+      external: true
+  
+networks:
+  my-network:

@@ -12,9 +12,6 @@
 
 <div class="flex flex-row space-x-2 h-full">
     <section class="flex flex-col m-2 rounded-md p-4 bg-slate-800 w-1/2 justify-center">
-        <h1>These are the environment vars:</h1>
-        <h1>{env.PUBLIC_BACKEND_HOST}</h1>
-        <h1>{env.PUBLIC_BACKEND_PORT}</h1>
         <h1 class="text-jax-yellow text-6xl mb-2">Welcome to Jasper</h1>
         <p class="text-slate-50">
             Jasper is an open source programming companion for developers working

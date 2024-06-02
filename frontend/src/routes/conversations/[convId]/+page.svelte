@@ -34,9 +34,11 @@
     let is_loading: boolean = false;
 
     function handleKeydown(event: KeyboardEvent) {
-        if(event.key === 'Enter' && !event.shiftKey){
+        if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
-            handleSubmit();
+            if (user_question.trim().length > 0) {
+                handleSubmit();
+            }
         }
     }
 
@@ -142,7 +144,7 @@
             on:keydown={handleKeydown}
         ></textarea>
         <!-- Design choice: added these checks here instead of in handleSubmit to reduce flickering in the ui and reduce number of function calls  -->
-        {#if is_loading || user_question.length < 1}
+        {#if is_loading || user_question.trim().length < 1}
             <div class="bg-gray-400 h-max m-2 p-2 rounded-md">Submit</div>
         {:else}
             <button 

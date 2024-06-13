@@ -1,4 +1,0 @@
-python-dotenv
-hatchet-sdk==0.26.3
-openai
-weaviate-client

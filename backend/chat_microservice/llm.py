@@ -92,7 +92,7 @@ def get_chat_completion(messages: list[dict[str,str]], model="gpt-3.5-turbo"):
 # ToDo: add some error handling for getting rate limited by llm api etc
 # get assistant completion rag modifies the contents of the messages list
 # ToDo: add proper logging here, consider using Arise
-def get_assistant_completion_rag(messages: list[str]):
+def get_assistant_completion_rag(messages: list[dict[str,str]]):
     collection_name = current_app.config["COLLECTION_NAME"]
 
     # messages is gauranteed to be in order by message offset ascending

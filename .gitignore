@@ -16,3 +16,5 @@ frontend/.env.*
 !frontend/.env.example
 frontend/vite.config.js.timestamp-*
 frontend/vite.config.ts.timestamp-*
+
+backend/hatchet/.env.hatchet

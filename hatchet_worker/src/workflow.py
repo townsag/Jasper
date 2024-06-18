@@ -26,7 +26,9 @@ def build_prompt_rag(context: list[str], query: str) -> str:
 @hatchet.workflow(name="vanilla-rag", on_events=["message:create"])
 class VanillaRagWorkflow:
     def __init__(self):
+        print("\n=====\nabout to open a connection to oai ")
         self.client_OAI = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        print("\n=====\nabout to open a connection to weaviate db")
         self.client_WV = weaviate.connect_to_local()
         self.embedding_model = "text-embedding-3-small"
         self.generation_model = "gpt-3.5-turbo"

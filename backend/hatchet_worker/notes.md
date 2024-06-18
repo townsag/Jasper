@@ -1,2 +1,0 @@
-- run hatchet worker using:
-    - cd backend && python -m hatchet_worker.main

@@ -1,0 +1,10 @@
+services:
+  hatchet-worker:
+    container_name: hatchet-worker
+    build: ./hatchet_worker
+    networks:
+      - worker-resources
+
+networks:
+  worker-resources:
+    external: true

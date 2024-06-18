@@ -2,18 +2,20 @@ services:
   weaviate:
     container_name: weaviate-db
     command:
-    - --host
-    - 0.0.0.0
-    - --port
-    - '8080'
-    - --scheme
-    - http
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8080'
+      - --scheme
+      - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.24.2
-    ports:
-    - 8080:8080
-    - 50051:50051
+    ports:        # probably dont have to publish these as the weaviate service is on the same user defined network as the workers
+      - 8080:8080
+      - 50051:50051
     volumes:
-    - weaviate_data:/var/lib/weaviate
+      - weaviate_data:/var/lib/weaviate
+    networks:             # add worker to user defined network with db 
+      - worker-resources
     restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25
@@ -24,5 +26,10 @@ services:
       CLUSTER_HOSTNAME: 'node1'
 
 volumes:
-    weaviate_data:
-      external: true
+  weaviate_data:
+    external: true
+
+networks:
+  worker-resources:
+    driver: bridge
+    name: worker-resources

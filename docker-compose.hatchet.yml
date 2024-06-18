@@ -11,6 +11,8 @@ services:
       - POSTGRES_DB=hatchet
     volumes:
       - hatchet_lite_postgres_data:/var/lib/postgresql/data
+    networks:
+      - worker-resources
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "-d", "hatchet"]
       interval: 10s
@@ -20,8 +22,8 @@ services:
   hatchet-lite:
     image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:latest
     ports:
-      - "8888:8888"
-      - "7077:7077"
+      - "8888:8888"     # publishing these ports may be unecessary because this service is on the worker-resources network    
+      - "7077:7077"   
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,8 +49,14 @@ services:
     volumes:
       - "hatchet_lite_rabbitmq_data:/var/lib/rabbitmq/mnesia"
       - "hatchet_lite_config:/config"
+    networks:
+      - worker-resources
  
 volumes:
   hatchet_lite_postgres_data:
   hatchet_lite_rabbitmq_data:
   hatchet_lite_config:
+
+networks:
+  worker-resources:
+    external: true

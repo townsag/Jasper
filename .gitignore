@@ -17,4 +17,4 @@ frontend/.env.*
 frontend/vite.config.js.timestamp-*
 frontend/vite.config.ts.timestamp-*
 
-backend/hatchet_worker/.env.hatchet
+hatchet_worker/.env.worker

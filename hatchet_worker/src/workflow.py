@@ -29,7 +29,16 @@ class VanillaRagWorkflow:
         print("\n=====\nabout to open a connection to oai ")
         self.client_OAI = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         print("\n=====\nabout to open a connection to weaviate db")
-        self.client_WV = weaviate.connect_to_local()
+        # self.client_WV = weaviate.connect_to_local()
+        self.client_WV = weaviate.connect_to_custom(
+            http_host=os.environ.get("PRIVATE_VECTOR_DB_HOST"),
+            http_port=os.environ.get("PRIVATE_VECTOR_DB_HTTP_PORT"),
+            http_secure=False,
+            grpc_host=os.environ.get("PRIVATE_VECTOR_DB_HOST"),
+            grpc_port=os.environ.get("PRIVATE_VECTOR_DB_GRPS_PORT"),
+            grpc_secure=False
+        )
+        print("\n=====\ncreated a connection to weaviate db")
         self.embedding_model = "text-embedding-3-small"
         self.generation_model = "gpt-3.5-turbo"
         self.collection_name = os.environ.get("COLLECTION_NAME")
